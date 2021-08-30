@@ -12,21 +12,22 @@ def all_pairs_squared_hinge_loss(predictions, labels, margin):
             augmented_predictions[i] = predictions[i] + margin
         else:
             augmented_predictions[i] = predictions[i] 
-    augmented_predictions = np.argsort(augmented_predictions)
+    augmented_predictions_sorted = np.argsort(augmented_predictions)
     for j in range(0,len(augmented_predictions)):
-        if labels[augmented_predictions[j]] == 1:
-            z_coeff = margin - predictions[augmented_predictions[j]]
+        augmented_indicies = augmented_predictions_sorted[j]
+        if labels[augmented_indicies] == 1:
+            prediction_indicies = predictions[augmented_indicies]
+            z_coeff = margin - prediction_indicies
             a_coeff += 1
             b_coeff += -2*z_coeff
             c_coeff += z_coeff**2
         else:
-            running_loss += a_coeff*(predictions[augmented_predictions[j]]**2) + b_coeff*(predictions[augmented_predictions[j]]) + c_coeff
+            running_loss += a_coeff*(prediction_indicies**2) + b_coeff*(prediction_indicies) + c_coeff
     return running_loss
 
 def all_pairs_square_loss(predictions,labels,margin):
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     labels_length = len(labels)
-    z_coeff = 0
     for i in range(0,labels_length):
         if(labels[i] == 1):
             z_coeff = margin - predictions[i]
@@ -35,23 +36,26 @@ def all_pairs_square_loss(predictions,labels,margin):
             c_coeff += z_coeff**2
     for j in range(0,labels_length):
         if(labels[j] == 0):
-            running_loss += a_coeff*(predictions[j]**2) + b_coeff*predictions[j] + c_coeff
+            prediction_indicies = predictions[j]
+            running_loss += a_coeff*(prediction_indicies**2) + b_coeff*prediction_indicies + c_coeff
     return running_loss
 
-def full_loss(predictions,labels,margin):
+def square_loss(predictions,labels,margin):
     running_loss = 0
     I_pos = np.where(labels == 1)[0]
     I_neg = np.where(labels == 0)[0]
     for j in I_pos:
         for k in I_neg:
-            running_loss += (margin - (predictions[j] - predictions[k])**2)
+            z_coeff = predictions[j] - predictions[k]
+            running_loss += (margin - z_coeff)**2
     return running_loss
-# def main():
+
 size = 100
-predictions = np.random.randn(size)
-labels = np.random.randint(0,2,size)
-print(labels)
-print(all_pairs_squared_hinge_loss(predictions, labels,1))
+x = np.array([1,-1])
+predictions = 10**np.linspace(1,7,13).astype(int)
+labels = np.repeat(x,size/2)
+# print(all_pairs_squared_hinge_loss(predictions, labels,1))
 print(all_pairs_square_loss(predictions,labels,1))
-# print(full_loss(predictions,labels,1))
+print(square_loss(predictions,labels,1))
+
 
