@@ -1,19 +1,19 @@
 import pdb
 from numpy import random
 from numpy.core.fromnumeric import ptp
-# import torch
 import numpy as np
+import torch
 
 def all_pairs_squared_hinge_loss(predictions, labels, margin):
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     labels_length = len(labels)
-    augmented_predictions = np.zeros(labels_length)
+    augmented_predictions = torch.zeros(labels_length)
     for i in range(0,labels_length):
         if labels[i] == -1:
             augmented_predictions[i] = predictions[i] + margin
         else:
             augmented_predictions[i] = predictions[i]
-    augmented_predictions_sorted = np.argsort(augmented_predictions)
+    augmented_predictions_sorted = torch.argsort(augmented_predictions)
     for j in range(0,labels_length):
         augmented_indicies = augmented_predictions_sorted[j]
         predicted_value = predictions[augmented_indicies]

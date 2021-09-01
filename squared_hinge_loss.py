@@ -1,9 +1,10 @@
 import numpy as np
+import torch
 
 def squared_hinge_loss(predictions,labels,margin):
     running_loss = 0
-    I_pos = np.where(labels == 1)[0]
-    I_neg = np.where(labels == -1)[0]
+    I_pos = torch.where(labels == 1)[0]
+    I_neg = torch.where(labels == -1)[0]
     for i in I_pos:
         for j in I_neg:
             z_coeff = predictions[i] - predictions[j]
