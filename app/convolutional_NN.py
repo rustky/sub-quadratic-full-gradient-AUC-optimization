@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from squared_hinge_loss import squared_hinge_loss
 
 class Net(nn.Module):
     def __init__(self):
@@ -26,7 +27,7 @@ def train_classifier(trainloader,trainset):
     net = Net()
 
     #Define a Loss Function and Optimizer
-    criterion = nn.CrossEntropyLoss()
+    # criterion = squared_hinge_loss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     #Train the network
@@ -42,7 +43,7 @@ def train_classifier(trainloader,trainset):
 
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = criterion(outputs, labels)
+            loss = squared_hinge_loss(outputs, labels,1)
             loss.backward()
             optimizer.step()
 
