@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import pdb
 from squared_hinge_loss import squared_hinge_loss
 
 class Net(nn.Module):
@@ -27,7 +28,7 @@ def train_classifier(trainloader,trainset):
     net = Net()
 
     #Define a Loss Function and Optimizer
-    # criterion = squared_hinge_loss()
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     #Train the network
@@ -43,12 +44,15 @@ def train_classifier(trainloader,trainset):
 
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = squared_hinge_loss(outputs, labels,1)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
             # print statistics
-            running_loss += loss.item()
+            # pdb.set_trace()
+            for x in range(0,len(labels)):
+                pdb.set_trace()
+                running_loss += squared_hinge_loss(outputs[x],labels[x],1)
             if i % 2000 == 1999:    # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 2000))

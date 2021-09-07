@@ -1,7 +1,9 @@
 import numpy as np
 import torch
+import pdb
 
 def squared_hinge_loss(predictions,labels,margin):
+    # pdb.set_trace()
     running_loss = 0
     I_pos = torch.where(labels == 1)[0]
     I_neg = torch.where(labels == -1)[0]
