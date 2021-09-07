@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -27,8 +29,8 @@ def load_data():
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                             shuffle=False, num_workers=2)
 
-    classes = ('plane', 'car', 'bird', 'cat',
-            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    # classes = ('plane', 'car', 'bird', 'cat',
+    #         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
     # #get some random training images
     # dataiter = iter(trainloader)
@@ -39,4 +41,4 @@ def load_data():
     # # print labels
     # print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
 
-    return trainloader,trainset,testloader,testset
+    return trainloader, trainset, testloader, testset

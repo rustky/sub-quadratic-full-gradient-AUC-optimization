@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import numpy as np
 import pdb
 from squared_hinge_loss import squared_hinge_loss
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -26,9 +28,10 @@ class Net(nn.Module):
 
 def train_classifier(trainloader,trainset):
     net = Net()
+    pos_class = np.array(range(0, 4))
 
     #Define a Loss Function and Optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.Linear()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     #Train the network
@@ -38,21 +41,23 @@ def train_classifier(trainloader,trainset):
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-
+            bin_labels = torch.zeros(labels.size())
+            for x in range(0, len(labels)):
+                if labels[x].numpy() in pos_class:
+                    bin_labels[x] = 1
+                else:
+                    bin_labels[x] = -1
             # zero the parameter gradients
             optimizer.zero_grad()
-
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, bin_labels)
             loss.backward()
             optimizer.step()
 
             # print statistics
             # pdb.set_trace()
-            for x in range(0,len(labels)):
-                pdb.set_trace()
-                running_loss += squared_hinge_loss(outputs[x],labels[x],1)
+            running_loss += squared_hinge_loss(outputs, bin_labels, 1)
             if i % 2000 == 1999:    # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 2000))
