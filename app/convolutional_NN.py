@@ -26,12 +26,13 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
+
 def train_classifier(trainloader,trainset):
     net = Net()
     pos_class = np.array(range(0, 4))
 
     #Define a Loss Function and Optimizer
-    criterion = nn.Linear()
+    criterion = nn. MSELoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     #Train the network
@@ -51,13 +52,15 @@ def train_classifier(trainloader,trainset):
             optimizer.zero_grad()
             # forward + backward + optimize
             outputs = net(inputs)
+            sum_torch = torch.sum(outputs, 1)
             loss = criterion(outputs, bin_labels)
             loss.backward()
             optimizer.step()
 
             # print statistics
             # pdb.set_trace()
-            running_loss += squared_hinge_loss(outputs, bin_labels, 1)
+
+            running_loss += squared_hinge_loss(sum_torch, bin_labels, 1)
             if i % 2000 == 1999:    # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 2000))
@@ -67,16 +70,23 @@ def train_classifier(trainloader,trainset):
     PATH = './cifar_net.pth'
     torch.save(net.state_dict(), PATH)
 
+
 def test_classifier(testloader,testset):
+    pos_class = np.array(range(0, 4))
     dataiter = iter(testloader)
     images, labels = dataiter.next()
+    bin_labels = torch.zeros(labels.size())
+    for x in range(0, len(labels)):
+        if labels[x].numpy() in pos_class:
+            bin_labels[x] = 1
+        else:
+            bin_labels[x] = -1
     classes = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    
 
     # # print images
     # imshow(torchvision.utils.make_grid(images))
-    # print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
+    print('GroundTruth: ', ' '.join('%5s' % bin_labels[j] for j in range(4)))
 
     #load saved model
     PATH = './cifar_net.pth'
@@ -85,5 +95,5 @@ def test_classifier(testloader,testset):
     outputs = net(images)
     _, predicted = torch.max(outputs, 1)
 
-    print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
+    print('Predicted: ', ' '.join('%5s' % predicted[j]
                               for j in range(4)))
