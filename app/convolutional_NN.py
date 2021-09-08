@@ -15,7 +15,7 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, 1)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -31,13 +31,12 @@ def train_classifier(trainloader,trainset):
     net = Net()
     pos_class = np.array(range(0, 4))
 
-    #Define a Loss Function and Optimizer
-    criterion = nn. MSELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    # #Define a Loss Function and Optimizer
+    # criterion = nn. MSELoss()
+    # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
     #Train the network
     for epoch in range(2):  # loop over the dataset multiple times
-
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
@@ -48,19 +47,14 @@ def train_classifier(trainloader,trainset):
                     bin_labels[x] = 1
                 else:
                     bin_labels[x] = -1
-            # zero the parameter gradients
-            optimizer.zero_grad()
+
             # forward + backward + optimize
             outputs = net(inputs)
-            sum_torch = torch.sum(outputs, 1)
-            loss = criterion(outputs, bin_labels)
+            loss = squared_hinge_loss(outputs, bin_labels, 1)
             loss.backward()
-            optimizer.step()
 
-            # print statistics
-            # pdb.set_trace()
-
-            running_loss += squared_hinge_loss(sum_torch, bin_labels, 1)
+            running_loss += loss.item()
+            # print(i)
             if i % 2000 == 1999:    # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 2000))
