@@ -41,16 +41,9 @@ def train_classifier(trainloader,trainset):
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-            bin_labels = torch.zeros(labels.size())
-            for x in range(0, len(labels)):
-                if labels[x].numpy() in pos_class:
-                    bin_labels[x] = 1
-                else:
-                    bin_labels[x] = -1
-
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = squared_hinge_loss(outputs, bin_labels, 1)
+            loss = squared_hinge_loss(outputs, labels, 1)
             loss.backward()
 
             running_loss += loss.item()
