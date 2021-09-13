@@ -1,10 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import time
 import torch.optim as optim
 import numpy as np
 import pdb
 from squared_hinge_loss import squared_hinge_loss
+from all_pairs_square_loss import all_pairs_square_loss
+from all_pairs_squared_hinge_loss import all_pairs_squared_hinge_loss
+from square_loss import square_loss
 
 
 class Net(nn.Module):
@@ -27,14 +31,9 @@ class Net(nn.Module):
         return x
 
 
-def train_classifier(trainloader,trainset):
+def train_classifier(trainloader):
     net = Net()
-    pos_class = np.array(range(0, 4))
-
-    # #Define a Loss Function and Optimizer
-    # criterion = nn. MSELoss()
-    # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
+    start = time.time()
     #Train the network
     for epoch in range(2):  # loop over the dataset multiple times
         running_loss = 0.0
@@ -44,44 +43,39 @@ def train_classifier(trainloader,trainset):
             # forward + backward + optimize
        
             outputs = net(inputs)
-            loss = squared_hinge_loss(outputs, labels, 1)
+            loss = square_loss(outputs, labels, 1)
             loss.backward()
 
             running_loss += loss.item()
+            # print(running_loss)
+            # if i % 20 == 19:    # print every 20 mini-batches
+            #     print('[%d, %5d] loss: %.3f' %
+            #         (epoch + 1, i + 1, running_loss / 2000))
+            #     running_loss = 0.0
             # print(i)
-            if i % 2000 == 1999:    # print every 2000 mini-batches
-                print('[%d, %5d] loss: %.3f' %
-                    (epoch + 1, i + 1, running_loss / 2000))
-                running_loss = 0.0
-            print(i)
+    end = time.time()
+    print(end - start)
+    print(running_loss)
     print('Finished Training')
     PATH = './cifar_net.pth'
     torch.save(net.state_dict(), PATH)
 
 
-def test_classifier(testloader,testset):
-    pos_class = np.array(range(0, 4))
+def test_classifier(testloader):
     dataiter = iter(testloader)
     images, labels = dataiter.next()
-    bin_labels = torch.zeros(labels.size())
-    for x in range(0, len(labels)):
-        if labels[x].numpy() in pos_class:
-            bin_labels[x] = 1
-        else:
-            bin_labels[x] = -1
-    classes = ('plane', 'car', 'bird', 'cat',
-            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    classes = [1, -1]
 
     # # print images
     # imshow(torchvision.utils.make_grid(images))
-    print('GroundTruth: ', ' '.join('%5s' % bin_labels[j] for j in range(4)))
+    print('GroundTruth: ', ' '.join('%5s' % labels[j].item() for j in range(4)))
 
     #load saved model
     PATH = './cifar_net.pth'
     net = Net()
     net.load_state_dict(torch.load(PATH))
-    outputs = net(images)
+    with torch.no_grad():
+        outputs = net(images)
     _, predicted = torch.max(outputs, 1)
-
-    print('Predicted: ', ' '.join('%5s' % predicted[j]
+    print('Predicted: ', ' '.join('%5s' % classes[predicted[j].item()]
                               for j in range(4)))

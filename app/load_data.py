@@ -29,14 +29,13 @@ def load_data():
     for set in set_list:
         set.class_to_idx = {'positive': 1, 'negative': -1}
         set.classes = [1, -1]
-        set.bin_targets = []
         for label_idx in range(0,len(set.targets)):
             if set.targets[label_idx] in pos_labels:
                 set.targets[label_idx] = 1
             else:
                 set.targets[label_idx] = -1
                                         
-    batch_size = int(len(trainset)/10)
+    batch_size = int(len(trainset)/100)
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                             shuffle=True, num_workers=2)
@@ -56,4 +55,4 @@ def load_data():
     # # print labels
     # print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
 
-    return trainloader, trainset, testloader, testset
+    return trainloader, testloader
