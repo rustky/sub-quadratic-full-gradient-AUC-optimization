@@ -21,13 +21,10 @@ def load_data():
     pos_labels = [0, 1, 2, 3, 4]
     trainset = torchvision.datasets.CIFAR10(root='../data', train=True,
                                             download=True, transform=transform)
-    batch_size = 1000
-
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                            shuffle=True, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='../data', train=False,
                                         download=True, transform=transform)
+
     set_list = [trainset, testset]
     for set in set_list:
         set.class_to_idx = {'positive': 1, 'negative': -1}
@@ -35,9 +32,14 @@ def load_data():
         set.bin_targets = []
         for label_idx in range(0,len(set.targets)):
             if set.targets[label_idx] in pos_labels:
-                set.bin_targets.append(1)
+                set.targets[label_idx] = 1
             else:
-                set.bin_targets.append(-1)
+                set.targets[label_idx] = -1
+                                        
+    batch_size = int(len(trainset)/10)
+
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                            shuffle=True, num_workers=2)
 
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                             shuffle=False, num_workers=2)
@@ -47,12 +49,11 @@ def load_data():
 
     # #get some random training images
     dataiter = iter(trainloader)
-    images, labels = dataiter.next() #TODO: chagne so iter() loads binary labels
+    test = dataiter.next() #TODO: chagne so iter() loads binary labels
 
     # # show images
     # imshow(torchvision.utils.make_grid(images))
     # # print labels
     # print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
 
-    # return trainloader, trainset, testloader, testset
-    return 0
+    return trainloader, trainset, testloader, testset

@@ -42,6 +42,7 @@ def train_classifier(trainloader,trainset):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             # forward + backward + optimize
+       
             outputs = net(inputs)
             loss = squared_hinge_loss(outputs, labels, 1)
             loss.backward()
@@ -52,7 +53,7 @@ def train_classifier(trainloader,trainset):
                 print('[%d, %5d] loss: %.3f' %
                     (epoch + 1, i + 1, running_loss / 2000))
                 running_loss = 0.0
-
+            print(i)
     print('Finished Training')
     PATH = './cifar_net.pth'
     torch.save(net.state_dict(), PATH)
