@@ -4,11 +4,8 @@ import torch.nn.functional as F
 import time
 import torch.optim as optim
 import numpy as np
-import pdb
-from squared_hinge_loss import squared_hinge_loss
-from all_pairs_square_loss import all_pairs_square_loss
-from all_pairs_squared_hinge_loss import all_pairs_squared_hinge_loss
-from square_loss import square_loss
+from functional_square_loss import functional_square_loss
+from naive_square_loss import square_loss
 
 
 class Net(nn.Module):
@@ -31,8 +28,9 @@ class Net(nn.Module):
         return x
 
 
-def train_classifier(trainloader):
+def train_classifier(trainloader, loss_function):
     net = Net()
+    optimizer = optim.SGD(net.parameters(), lr=0.0000000001, momentum=0.9)
     start = time.time()
     #Train the network
     for epoch in range(2):  # loop over the dataset multiple times
@@ -40,22 +38,16 @@ def train_classifier(trainloader):
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-            # forward + backward + optimize
-       
-            outputs = net(inputs)
-            loss = square_loss(outputs, labels, 1)
-            loss.backward()
 
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = loss_function(outputs, labels, 1)
+            loss.backward()
+            optimizer.step()
             running_loss += loss.item()
             # print(running_loss)
-            # if i % 20 == 19:    # print every 20 mini-batches
-            #     print('[%d, %5d] loss: %.3f' %
-            #         (epoch + 1, i + 1, running_loss / 2000))
-            #     running_loss = 0.0
-            # print(i)
     end = time.time()
-    print(end - start)
-    print(running_loss)
+    # print(end - start)
     print('Finished Training')
     PATH = './cifar_net.pth'
     torch.save(net.state_dict(), PATH)
@@ -74,8 +66,7 @@ def test_classifier(testloader):
     PATH = './cifar_net.pth'
     net = Net()
     net.load_state_dict(torch.load(PATH))
-    with torch.no_grad():
-        outputs = net(images)
-    _, predicted = torch.max(outputs, 1)
-    print('Predicted: ', ' '.join('%5s' % classes[predicted[j].item()]
-                              for j in range(4)))
+    outputs = net(images)
+    _, predicted = 
+    print(outputs)
+    print('Predicted ', ' '.join('%5s' % classes[predicted[j]] for j in range(4)))
