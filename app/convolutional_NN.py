@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import time
 import torch.optim as optim
+from libauc.models import ResNet20
+from sklearn.metrics import roc_auc_score
 import numpy as np
-from functional_square_loss import functional_square_loss
-from naive_square_loss import square_loss
+
 
 
 class Net(nn.Module):
@@ -28,45 +29,48 @@ class Net(nn.Module):
         return x
 
 
-def train_classifier(trainloader, loss_function):
-    net = Net()
-    optimizer = optim.SGD(net.parameters(), lr=0.0000000001, momentum=0.9)
-    start = time.time()
-    #Train the network
-    for epoch in range(2):  # loop over the dataset multiple times
+def train_classifier(trainloader, testloader, loss_function):
+    train_results = []
+    lr = 0.1
+    model = ResNet20(pretrained=False, last_activation='sigmoid', num_classes=1)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
+        train_pred = []
+        train_true = []
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-
             # forward + backward + optimize
-            outputs = net(inputs)
+            outputs = model(inputs)
             loss = loss_function(outputs, labels, 1)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            # print(running_loss)
-    end = time.time()
-    # print(end - start)
+            train_pred.append(outputs.cpu().detach().numpy())
+            train_true.append(labels.cpu().detach().numpy())
+        train_true = np.concatenate(train_true)
+        train_pred = np.concatenate(train_pred)
+        train_auc = roc_auc_score(train_true, train_pred)
+        test_auc = test_classifier(testloader, model)
+        epoch_results = dict({'loss': running_loss, 'train_auc': train_auc, 'test_auc': test_auc, 'epoch': epoch, 'lr': lr})
+        train_results.append(epoch_results)
     print('Finished Training')
-    PATH = './cifar_net.pth'
-    torch.save(net.state_dict(), PATH)
+    return train_results
 
 
-def test_classifier(testloader):
-    dataiter = iter(testloader)
-    images, labels = dataiter.next()
-    classes = [1, -1]
+def test_classifier(testloader, model):
+    model.eval()
+    test_pred = []
+    test_true = []
+    for j, data in enumerate(testloader):
+        test_data, test_targets = data
+        y_pred = model(test_data)
+        test_pred.append(y_pred.cpu().detach().numpy())
+        test_true.append(test_targets.numpy())
+    test_true = np.concatenate(test_true)
+    test_pred = np.concatenate(test_pred)
+    val_auc = roc_auc_score(test_true, test_pred)
+    model.train()
+    return val_auc
 
-    # # print images
-    # imshow(torchvision.utils.make_grid(images))
-    print('GroundTruth: ', ' '.join('%5s' % labels[j].item() for j in range(4)))
-
-    #load saved model
-    PATH = './cifar_net.pth'
-    net = Net()
-    net.load_state_dict(torch.load(PATH))
-    outputs = net(images)
-    _, predicted = 
-    print(outputs)
-    print('Predicted ', ' '.join('%5s' % classes[predicted[j]] for j in range(4)))
