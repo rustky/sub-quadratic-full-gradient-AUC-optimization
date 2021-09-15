@@ -4,7 +4,7 @@ from numpy.core.fromnumeric import ptp
 import numpy as np
 import torch
 
-def all_pairs_squared_hinge_loss(predictions, labels, margin):
+def functional_square_hinge_loss(predictions, labels, margin):
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     labels_length = len(labels)
     augmented_predictions = torch.zeros(labels_length)

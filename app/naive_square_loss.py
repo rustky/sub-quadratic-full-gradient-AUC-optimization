@@ -2,7 +2,8 @@ import numpy as np
 import torch
 import pdb
 
-def square_loss(predictions,labels,margin):
+
+def naive_square_loss(predictions, labels, margin):
     running_loss = 0
     I_pos = torch.where(labels == 1)[0]
     I_neg = torch.where(labels == -1)[0]

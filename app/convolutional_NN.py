@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import time
 import torch.optim as optim
+from libauc.models import ResNet20
+from sklearn.metrics import roc_auc_score
 import numpy as np
-import pdb
-from squared_hinge_loss import squared_hinge_loss
+
 
 
 class Net(nn.Module):
@@ -15,7 +17,7 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, 1)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -27,73 +29,48 @@ class Net(nn.Module):
         return x
 
 
-def train_classifier(trainloader,trainset):
-    net = Net()
-    pos_class = np.array(range(0, 4))
-
-    #Define a Loss Function and Optimizer
-    criterion = nn. MSELoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-    #Train the network
-    for epoch in range(2):  # loop over the dataset multiple times
-
+def train_classifier(trainloader, testloader, loss_function):
+    train_results = []
+    lr = 0.1
+    model = ResNet20(pretrained=False, last_activation='sigmoid', num_classes=1)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
+        train_pred = []
+        train_true = []
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
-            bin_labels = torch.zeros(labels.size())
-            for x in range(0, len(labels)):
-                if labels[x].numpy() in pos_class:
-                    bin_labels[x] = 1
-                else:
-                    bin_labels[x] = -1
-            # zero the parameter gradients
-            optimizer.zero_grad()
             # forward + backward + optimize
-            outputs = net(inputs)
-            sum_torch = torch.sum(outputs, 1)
-            loss = criterion(outputs, bin_labels)
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels, 1)
             loss.backward()
             optimizer.step()
-
-            # print statistics
-            # pdb.set_trace()
-
-            running_loss += squared_hinge_loss(sum_torch, bin_labels, 1)
-            if i % 2000 == 1999:    # print every 2000 mini-batches
-                print('[%d, %5d] loss: %.3f' %
-                    (epoch + 1, i + 1, running_loss / 2000))
-                running_loss = 0.0
-
+            running_loss += loss.item()
+            train_pred.append(outputs.cpu().detach().numpy())
+            train_true.append(labels.cpu().detach().numpy())
+        train_true = np.concatenate(train_true)
+        train_pred = np.concatenate(train_pred)
+        train_auc = roc_auc_score(train_true, train_pred)
+        test_auc = test_classifier(testloader, model)
+        epoch_results = dict({'loss': running_loss, 'train_auc': train_auc, 'test_auc': test_auc, 'epoch': epoch, 'lr': lr})
+        train_results.append(epoch_results)
     print('Finished Training')
-    PATH = './cifar_net.pth'
-    torch.save(net.state_dict(), PATH)
+    return train_results
 
 
-def test_classifier(testloader,testset):
-    pos_class = np.array(range(0, 4))
-    dataiter = iter(testloader)
-    images, labels = dataiter.next()
-    bin_labels = torch.zeros(labels.size())
-    for x in range(0, len(labels)):
-        if labels[x].numpy() in pos_class:
-            bin_labels[x] = 1
-        else:
-            bin_labels[x] = -1
-    classes = ('plane', 'car', 'bird', 'cat',
-            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+def test_classifier(testloader, model):
+    model.eval()
+    test_pred = []
+    test_true = []
+    for j, data in enumerate(testloader):
+        test_data, test_targets = data
+        y_pred = model(test_data)
+        test_pred.append(y_pred.cpu().detach().numpy())
+        test_true.append(test_targets.numpy())
+    test_true = np.concatenate(test_true)
+    test_pred = np.concatenate(test_pred)
+    val_auc = roc_auc_score(test_true, test_pred)
+    model.train()
+    return val_auc
 
-    # # print images
-    # imshow(torchvision.utils.make_grid(images))
-    print('GroundTruth: ', ' '.join('%5s' % bin_labels[j] for j in range(4)))
-
-    #load saved model
-    PATH = './cifar_net.pth'
-    net = Net()
-    net.load_state_dict(torch.load(PATH))
-    outputs = net(images)
-    _, predicted = torch.max(outputs, 1)
-
-    print('Predicted: ', ' '.join('%5s' % predicted[j]
-                              for j in range(4)))
