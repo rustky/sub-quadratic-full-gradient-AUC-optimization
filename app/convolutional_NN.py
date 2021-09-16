@@ -34,7 +34,7 @@ def train_classifier(trainloader, testloader, loss_function):
     lr = 0.1
     model = ResNet20(pretrained=False, last_activation='sigmoid', num_classes=1)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
-    for epoch in range(10):  # loop over the dataset multiple times
+    for epoch in range(50):  # loop over the dataset multiple times
         running_loss = 0.0
         train_pred = []
         train_true = []
