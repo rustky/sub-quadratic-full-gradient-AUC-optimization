@@ -11,7 +11,6 @@ from naive_square_hinge_loss import naive_square_hinge_loss
 def main():
     trainloader, testloader = load_data()
     train_results = train_classifier(trainloader, testloader, functional_square_loss)
-    print(train_results)
     train_auc_dict = {}
     for results_length in range(10):
         train_auc_dict["auc"] = train_results[results_length]['train_auc']

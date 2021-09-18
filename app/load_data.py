@@ -34,10 +34,11 @@ def load_data():
                 set.targets[label_idx] = 1
             else:
                 set.targets[label_idx] = -1
-                                        
-    batch_size = int(len(trainset)/100)
+    subset = list(range(0, len(trainset), 100))
+    trainset_subset = torch.utils.data.Subset(trainset, subset)
+    batch_size = int(len(trainset_subset))
 
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+    trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
                                             shuffle=True, num_workers=2)
 
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
