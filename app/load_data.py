@@ -68,10 +68,19 @@ def load_data(SEED, BATCH_SIZE, imratio):
                 set.targets[label_idx] = 1
             else:
                 set.targets[label_idx] = -1
+<<<<<<< HEAD
 
     subset = list(range(0, len(trainset), 100))
     trainset_subset = torch.utils.data.Subset(trainset, subset)
     batch_size = int(len(trainset_subset))
+=======
+    subset = list(range(0, len(trainset), 100))
+    trainset_subset = torch.utils.data.Subset(trainset, subset)
+    batch_size = int(len(trainset_subset))
+
+    trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
+                                            shuffle=True, num_workers=2)
+>>>>>>> a8358c7249e943d2ab8d1bb4b1b9f502dc7611dd
 
     trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
                                                shuffle=True, num_workers=2)
