@@ -3,10 +3,12 @@ import torchvision
 import torch
 from PIL import Image
 import torchvision.transforms as transforms
+from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Dataset
 import numpy as np
 from libauc.datasets import CIFAR10
 from libauc.datasets import ImbalanceGenerator
+
 
 
 class ImageDataset(Dataset):
@@ -39,6 +41,30 @@ class ImageDataset(Dataset):
         return image, target
 
 
+class StratifiedBatchSampler:
+    """Stratified batch sampling
+    Provides equal representation of target classes in each batch
+    """
+    def __init__(self, y, batch_size, shuffle=True):
+        if torch.is_tensor(y):
+            y = y.numpy()
+        assert len(y.shape) == 1, 'label array must be 1D'
+        n_batches = int(len(y) / batch_size)
+        self.skf = StratifiedKFold(n_splits=n_batches, shuffle=shuffle)
+        self.X = torch.randn(len(y),1).numpy()
+        self.y = y
+        self.shuffle = shuffle
+
+    def __iter__(self):
+        if self.shuffle:
+            self.skf.random_state = torch.randint(0,int(1e8),size=()).item()
+        for train_idx, test_idx in self.skf.split(self.X, self.y):
+            yield test_idx
+
+    def __len__(self):
+        return len(self.y)
+
+
 def set_all_seeds(SEED):
     # REPRODUCIBILITY
     torch.manual_seed(SEED)
@@ -46,47 +72,26 @@ def set_all_seeds(SEED):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-def load_data(SEED, BATCH_SIZE, imratio):
+
+def load_data(SEED, imratio):
     # TODO: stratify labels in unbalanced dataset
+    (train_data, train_label), (test_data, test_label) = CIFAR10()
+    (train_images, train_labels) = ImbalanceGenerator(train_data, train_label, imratio=imratio, shuffle=True,
+                                                      random_seed=SEED)
+    (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
 
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                            download=True, transform=transform)
-
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                           download=True, transform=transform)
-    pos_labels = [0, 1, 2, 3, 4]
-    set_list = [trainset, testset]
-    for set in set_list:
-        set.class_to_idx = {'positive': 1, 'negative': -1}
-        set.classes = [1, -1]
-        for label_idx in range(0, len(set.targets)):
-            if set.targets[label_idx] in pos_labels:
-                set.targets[label_idx] = 1
-            else:
-                set.targets[label_idx] = -1
-<<<<<<< HEAD
-
-    subset = list(range(0, len(trainset), 100))
-    trainset_subset = torch.utils.data.Subset(trainset, subset)
-    batch_size = int(len(trainset_subset))
-=======
+    trainset = ImageDataset(train_images, train_labels)
     subset = list(range(0, len(trainset), 100))
     trainset_subset = torch.utils.data.Subset(trainset, subset)
     batch_size = int(len(trainset_subset))
 
     trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
-                                            shuffle=True, num_workers=2)
->>>>>>> a8358c7249e943d2ab8d1bb4b1b9f502dc7611dd
-
-    trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
-                                               shuffle=True, num_workers=2)
-
-    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                               shuffle=False, num_workers=2)
+                                              shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
+    # trainloader = torch.utils.data.DataLoader(ImageDataset(train_images, train_labels),
+    #                                           batch_sampler=StratifiedBatchSampler(flat_train_labels, batch_size),
+    #                                           num_workers=1, pin_memory=True)
+    testloader = torch.utils.data.DataLoader(ImageDataset(test_images, test_labels, mode='test'), batch_size=batch_size,
+                                             shuffle=False, num_workers=1, pin_memory=True)
 
     return trainloader, testloader
 
