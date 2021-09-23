@@ -81,7 +81,7 @@ def load_data(SEED, imratio):
     (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
 
     trainset = ImageDataset(train_images, train_labels)
-    subset = list(range(0, len(trainset), 100))
+    subset = list(range(0, len(trainset), 1000))
     trainset_subset = torch.utils.data.Subset(trainset, subset)
     batch_size = int(len(trainset_subset))
 
