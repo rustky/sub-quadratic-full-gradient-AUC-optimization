@@ -83,9 +83,9 @@ def load_data(SEED, imratio):
     trainset = ImageDataset(train_images, train_labels)
     subset = list(range(0, len(trainset), 1000))
     trainset_subset = torch.utils.data.Subset(trainset, subset)
-    batch_size = int(len(trainset_subset))
+    batch_size = 20
 
-    trainloader = torch.utils.data.DataLoader(trainset_subset, batch_size=batch_size,
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
     # trainloader = torch.utils.data.DataLoader(ImageDataset(train_images, train_labels),
     #                                           batch_sampler=StratifiedBatchSampler(flat_train_labels, batch_size),
