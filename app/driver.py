@@ -14,7 +14,7 @@ def main():
     lr = 1e-06
     num_epochs = 25
     trainloader, testloader = load_data(SEED, imratio)
-    train_results = train_classifier(trainloader, testloader, functional_square_loss, num_epochs, lr)
+    train_results = train_classifier(trainloader, testloader, functional_square_hinge_loss, num_epochs, lr)
     train_auc_dict = {}
     for results_length in range(num_epochs):
         train_auc_dict["auc"] = train_results[results_length]['train_auc']
