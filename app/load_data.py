@@ -73,7 +73,7 @@ def set_all_seeds(SEED):
     torch.backends.cudnn.benchmark = False
 
 
-def load_data(SEED, imratio):
+def load_data(SEED, use_subset, batch_size, imratio):
     # TODO: stratify labels in unbalanced dataset
     (train_data, train_label), (test_data, test_label) = CIFAR10()
     (train_images, train_labels) = ImbalanceGenerator(train_data, train_label, imratio=imratio, shuffle=True,
@@ -81,15 +81,14 @@ def load_data(SEED, imratio):
     (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
 
     trainset = ImageDataset(train_images, train_labels)
-    subset = list(range(0, len(trainset), 1000))
-    trainset_subset = torch.utils.data.Subset(trainset, subset)
-    batch_size = 20
+
+    if use_subset == True:
+        subset = list(range(0, len(trainset), 100))
+        trainset = torch.utils.data.Subset(trainset, subset)
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
-    # trainloader = torch.utils.data.DataLoader(ImageDataset(train_images, train_labels),
-    #                                           batch_sampler=StratifiedBatchSampler(flat_train_labels, batch_size),
-    #                                           num_workers=1, pin_memory=True)
+
     testloader = torch.utils.data.DataLoader(ImageDataset(test_images, test_labels, mode='test'), batch_size=batch_size,
                                              shuffle=False, num_workers=1, pin_memory=True)
 

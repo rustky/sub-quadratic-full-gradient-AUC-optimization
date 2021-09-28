@@ -11,16 +11,12 @@ from functional_square_loss import functional_square_loss
 import numpy as np
 
 
-def train_classifier(trainloader, testloader, loss_function, num_epochs, learning_rate):
+def time_per_epoch(trainloader, testloader, loss_function, num_epochs, learning_rate):
     model = ResNet20(pretrained=False, last_activation='sigmoid', num_classes=1)
     if torch.cuda.is_available():
         model = model.cuda()
-    train_results = []
-    print(str(loss_function))
     optimizer = SGD(model.parameters(), lr=learning_rate)
-    count = 0
     for epoch in range(num_epochs):  # loop over the dataset multiple times
-        print("Epoch: " + str(epoch))
         train_pred = []
         train_true = []
         model.train()
@@ -32,33 +28,11 @@ def train_classifier(trainloader, testloader, loss_function, num_epochs, learnin
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            end = datetime.now()
             train_pred.append(outputs.cpu().detach().numpy())
             train_true.append(targets.cpu().detach().numpy())
-            count = count + len(data)
         train_true = np.concatenate(train_true)
         train_pred = np.concatenate(train_pred)
         train_auc = roc_auc_score(train_true, train_pred)
 
-        test_auc = test_classifier(testloader, model)
-        epoch_results = dict({'loss': loss.item(), 'train_auc': train_auc, 'test_auc': test_auc, 'epoch': epoch, 'lr': learning_rate})
-        train_results.append(train_auc)
-        print(epoch_results)
-    return train_results
 
-
-def test_classifier(testloader, model):
-    model.eval()
-    test_pred = []
-    test_true = []
-    for j, data in enumerate(testloader):
-        test_data, test_targets = data
-        y_pred = model(test_data)
-        test_pred.append(y_pred.cpu().detach().numpy())
-        test_true.append(test_targets.cpu().detach().numpy())
-    test_true = np.concatenate(test_true)
-    test_pred = np.concatenate(test_pred)
-    val_auc = roc_auc_score(test_true, test_pred)
-    model.train()
-    return val_auc
 
