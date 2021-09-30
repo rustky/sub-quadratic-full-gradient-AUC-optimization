@@ -15,10 +15,11 @@ def train_classifier(trainloader, testloader, loss_function, num_epochs, learnin
     model = ResNet20(pretrained=False, last_activation='sigmoid', num_classes=1)
     if torch.cuda.is_available():
         model = model.cuda()
-    train_results = []
+    results = []
     print(str(loss_function))
     optimizer = SGD(model.parameters(), lr=learning_rate)
     count = 0
+    set_loaders = {"train": trainloader, "test":testloader}
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         print("Epoch: " + str(epoch))
         train_pred = []
@@ -33,18 +34,22 @@ def train_classifier(trainloader, testloader, loss_function, num_epochs, learnin
             loss.backward()
             optimizer.step()
             end = datetime.now()
-            train_pred.append(outputs.cpu().detach().numpy())
-            train_true.append(targets.cpu().detach().numpy())
             count = count + len(data)
-        train_true = np.concatenate(train_true)
-        train_pred = np.concatenate(train_pred)
-        train_auc = roc_auc_score(train_true, train_pred)
-
-        test_auc = test_classifier(testloader, model)
-        epoch_results = dict({'loss': loss.item(), 'train_auc': train_auc, 'test_auc': test_auc, 'epoch': epoch, 'lr': learning_rate})
-        train_results.append(train_auc)
-        print(epoch_results)
-    return train_results
+        model.eval()
+        epoch_res = {'epoch': epoch, 'lr': learning_rate}
+        for set_name, loader in set_loaders.items():
+            outputs_list = []
+            targets_list = []
+            for data, targets in loader:
+                outputs = model(data)
+                outputs_list.append(outputs.cpu().detach().numpy())
+                targets_list.append(targets.cpu().detach().numpy())
+            outputs_array = np.concatenate(outputs_list)
+            targets_array = np.concatenate(targets_list)
+            epoch_res[set_name + "_loss"] = loss_function(outputs_array, targets_array, 1)
+            epoch_res[set_name + "_auc"] = roc_auc_score(outputs_array, targets_array)
+        results.append(epoch_res)
+    return results
 
 
 def test_classifier(testloader, model):
