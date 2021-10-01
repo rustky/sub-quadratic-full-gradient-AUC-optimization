@@ -33,7 +33,6 @@ def train_classifier(trainloader, testloader, loss_function, num_epochs, learnin
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            end = datetime.now()
             count = count + len(data)
         model.eval()
         epoch_res = {'epoch': epoch, 'lr': learning_rate}
@@ -46,8 +45,10 @@ def train_classifier(trainloader, testloader, loss_function, num_epochs, learnin
                 targets_list.append(targets.cpu().detach().numpy())
             outputs_array = np.concatenate(outputs_list)
             targets_array = np.concatenate(targets_list)
-            epoch_res[set_name + "_loss"] = loss_function(outputs_array, targets_array, 1)
-            epoch_res[set_name + "_auc"] = roc_auc_score(outputs_array, targets_array)
+            outputs_tensor = torch.from_numpy(outputs_array)
+            targets_tensor = torch.from_numpy(targets_array)
+            epoch_res[set_name + "_loss"] = loss_function(outputs_tensor, targets_tensor, 1)
+            epoch_res[set_name + "_auc"] = roc_auc_score(targets_array, outputs_array)
         results.append(epoch_res)
     return results
 

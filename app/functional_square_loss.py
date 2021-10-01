@@ -6,6 +6,8 @@ def functional_square_loss(predictions,labels, margin):
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     I_pos = torch.where(labels == 1)[0]
     I_neg = torch.where(labels == 0)[0]
+    num_pos = len(I_pos)
+    num_neg = len(I_neg)
     for i in I_pos:
         z_coeff = margin - predictions[i]
         a_coeff += 1
@@ -14,4 +16,4 @@ def functional_square_loss(predictions,labels, margin):
     for j in I_neg:
         predicted_value = predictions[j]
         running_loss += a_coeff*(predicted_value**2) + b_coeff*predicted_value + c_coeff
-    return running_loss
+    return running_loss/(num_neg * num_pos)
