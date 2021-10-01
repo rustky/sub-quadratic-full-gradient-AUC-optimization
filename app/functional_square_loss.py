@@ -14,4 +14,4 @@ def functional_square_loss(predictions,labels, margin=1):
     for j in I_neg:
         predicted_value = predictions[j]
         running_loss += a_coeff*(predicted_value**2) + b_coeff*predicted_value + c_coeff
-    return running_loss
+    return running_loss/(len(I_pos)*len(I_neg))
