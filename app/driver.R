@@ -28,5 +28,10 @@ batchtools::submitJobs(chunks, resources=list(
   ntasks=1, #>1 for MPI jobs.
   chunks.as.arrayjobs=TRUE), reg=reg)
 
+reg <- batchtools::loadRegistry("registry")
 jt <- batchtools::getJobTable(reg=reg)
-jt[!is.na(error)]
+jt[is.na(done)]
+logs <- batchtools::grepLogs(pattern="Error", reg=reg)
+logs[, .(
+  jobs=.N
+), by=matches]
