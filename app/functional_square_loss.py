@@ -2,7 +2,7 @@ import numpy as torch
 import pdb
 import torch
 
-def functional_square_loss(predictions,labels, margin):
+def functional_square_loss(predictions,labels, margin=1):
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     I_pos = torch.where(labels == 1)[0]
     I_neg = torch.where(labels == 0)[0]
