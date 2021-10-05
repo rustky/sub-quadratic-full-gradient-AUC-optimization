@@ -9,17 +9,26 @@ from torchmetrics.classification.auroc import AUROC
 import numpy as np
 roc_auc_score = AUROC()
 from load_data import load_data
+import functional_loss
+import sys
+import os
+
+# https://stackoverflow.com/questions/53331247/pytorch-0-4-0-there-are-three-ways-to-create-tensors-on-cuda-device-is-there-s/53332659
+dev_str = "cuda" if torch.cuda.is_available() else "cpu"
+print('using device='+dev_str)
+device = torch.device(dev_str)
 
 def write_list(f, L):
     txt = "\t".join([str(x) for x in L]) + "\n"
     f.write(txt)
 
 COLUMN_ORDER = [
-    "loss",
+    'pretrained',
+    "loss_name",
     "batch_size",
     "imratio",
-    "epoch",
     "lr",
+    "epoch",
     "train_loss",
     "train_auc",
     "test_loss",
@@ -27,34 +36,41 @@ COLUMN_ORDER = [
 ]
 
 def train_classifier(
-    batch_size,
-    imratio,
-    loss_function,
-    num_epochs,
-    learning_rate
+    batch_size_str,
+    imratio_str,
+    loss_name,
+    lr_str,
+    out_dir,
+    num_epochs=100,
+    pretrained=True
 ):
-    use_subset = False
+    batch_size = int(batch_size_str)
+    imratio = float(imratio_str)
+    lr = float(lr_str)
+    is_interactive_job = os.getenv("SLURM_ARRAY_TASK_COUNT") is None
+    use_subset = is_interactive_job
+    print("use_subset=%s"%use_subset)
     SEED = 123
     trainloader, testloader = load_data(
         SEED, use_subset, batch_size, imratio)
+    loss_function = getattr(functional_loss, loss_name)
     epoch_res = {
-        "loss": loss_function.__name__,
-        'lr': learning_rate,
+        'pretrained':pretrained,
+        "loss_name": loss_name,
+        'lr': lr,
         "batch_size": batch_size,
         "imratio": imratio,
     }
     file_key = "-".join([
         '%s=%s' % pair for pair in epoch_res.items()
     ])
-    out_csv = 'results/%s.csv' % file_key
+    out_csv = '%s/%s.csv' % (out_dir,file_key)
     f = open(out_csv, "w")
     write_list(f, COLUMN_ORDER)
     model = ResNet20(
-        pretrained=False, last_activation='sigmoid', num_classes=1)
-    if torch.cuda.is_available():
-        print('using cuda')
-        model = model.cuda()
-    optimizer = SGD(model.parameters(), lr=learning_rate)
+        pretrained=pretrained, last_activation='sigmoid', num_classes=1)
+    model = model.to(device)
+    optimizer = SGD(model.parameters(), lr=lr)
     set_loaders = {
         "train": trainloader,
         "test":testloader
@@ -64,6 +80,8 @@ def train_classifier(
         print("Epoch: " + str(epoch))
         model.train()
         for data, targets in trainloader:
+            data = data.to(device)
+            targets = targets.to(device)
             outputs = model(data)
             loss = loss_function(outputs, targets)
             optimizer.zero_grad()
@@ -72,16 +90,16 @@ def train_classifier(
         model.eval()
         with torch.no_grad():
             for set_name, loader in set_loaders.items():
-                print(set_name)
                 outputs_list = []
                 targets_list = []
                 for data, targets in loader:
+                    data = data.to(device)
+                    targets = targets.to(device)
                     outputs = model(data)
                     outputs_list.append(outputs)
                     targets_list.append(targets)
                 outputs_array = torch.cat(outputs_list)
                 targets_array = torch.cat(targets_list).int()
-                print(outputs_array.size(), targets_array.size())
                 epoch_res[set_name + "_loss"] = loss_function(
                     outputs_array, targets_array).item()
                 epoch_res[set_name + "_auc"] = roc_auc_score(
