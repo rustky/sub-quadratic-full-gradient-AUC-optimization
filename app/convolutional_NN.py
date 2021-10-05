@@ -15,6 +15,7 @@ def write_list(f, L):
     f.write(txt)
 
 COLUMN_ORDER = [
+    "loss",
     "batch_size",
     "imratio",
     "epoch",
