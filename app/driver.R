@@ -1,5 +1,6 @@
 library(batchtools)
 out_dir <- strftime(Sys.time(), "results-%Y-%m-%d")
+
 dir.create(out_dir)
 reg.dir <- sub("results", "registry", out_dir)
 unlink(reg.dir, recursive=TRUE)
@@ -28,7 +29,7 @@ job.table <- batchtools::getJobTable(reg=reg)
 chunks <- data.frame(job.table, chunk=1)
 batchtools::submitJobs(chunks, resources=list(
   walltime = 2*24*60*60,#seconds
-  memory = 8000,#megabytes per cpu
+  memory = 16000,#megabytes per cpu
   ncpus=1,  #>1 for multicore/parallel jobs.
   ntasks=1, #>1 for MPI jobs.
   chunks.as.arrayjobs=TRUE), reg=reg)

@@ -1,4 +1,5 @@
 import torch
+torch.backends.cudnn.benchmark = True # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
 import torch.nn as nn
 import torch.nn.functional as F
 import time
@@ -12,6 +13,11 @@ from load_data import load_data
 import functional_loss
 import sys
 import os
+
+## TODO Create tensors directly on the target device: Instead of
+## calling torch.rand(size).cuda() to generate a random tensor,
+## produce the output directly on the target device: torch.rand(size,
+## device=torch.device('cuda')).
 
 # https://stackoverflow.com/questions/53331247/pytorch-0-4-0-there-are-three-ways-to-create-tensors-on-cuda-device-is-there-s/53332659
 dev_str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,7 +90,7 @@ def train_classifier(
             targets = targets.to(device)
             outputs = model(data)
             loss = loss_function(outputs, targets)
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
         model.eval()
