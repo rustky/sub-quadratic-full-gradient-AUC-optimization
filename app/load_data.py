@@ -1,12 +1,14 @@
 import pdb
 import torchvision
 import torch
+from sklearn.model_selection import train_test_split
 from PIL import Image
 import torchvision.transforms as transforms
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Dataset
 import numpy as np
 from libauc.datasets import CIFAR10
+from libauc.datasets import CAT_VS_DOG
 from libauc.datasets import ImbalanceGenerator
 
 
@@ -73,18 +75,21 @@ def set_all_seeds(SEED):
     torch.backends.cudnn.benchmark = False
 
 
-def load_data(SEED, use_subset, batch_size, imratio):
+def load_data(SEED, use_subset, batch_size, imratio, dataset):
     # TODO: stratify labels in unbalanced dataset
-    (train_data, train_label), (test_data, test_label) = CIFAR10()
+    (train_data, train_label), (test_data, test_label) = eval(dataset + "()")
     (train_images, train_labels) = ImbalanceGenerator(train_data, train_label, imratio=imratio, shuffle=True,
                                                       random_seed=SEED)
     (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
 
     trainset = ImageDataset(train_images, train_labels)
 
-    if use_subset == True:
-        subset = list(range(0, len(trainset), 100))
-        trainset = torch.utils.data.Subset(trainset, subset)
+    if use_subset:
+        train_x, test_x, train_y, test_y \
+            = train_test_split(train_images, train_labels, train_size=0.999, random_state=1, stratify=train_labels)
+        subset = list(range(0, len(train_x), 100))
+        trainset_strat = ImageDataset(train_x, train_y)
+        trainset = torch.utils.data.Subset(trainset_strat, subset)
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
