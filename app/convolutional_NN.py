@@ -6,6 +6,7 @@ import time
 import torch.optim as optim
 from libauc.optimizers import SGD
 from libauc.models import ResNet20
+from libauc.models import *
 from torchmetrics.classification.auroc import AUROC
 import numpy as np
 roc_auc_score = AUROC()
@@ -47,9 +48,12 @@ def train_classifier(
     loss_name,
     lr_str,
     out_dir,
-    num_epochs=100,
+    dataset,
+    model,
+    num_epochs=1,
     pretrained=True
 ):
+    torch.autograd.detect_anomaly()
     batch_size = int(batch_size_str)
     imratio = float(imratio_str)
     lr = float(lr_str)
@@ -58,7 +62,7 @@ def train_classifier(
     print("use_subset=%s"%use_subset)
     SEED = 123
     trainloader, testloader = load_data(
-        SEED, use_subset, batch_size, imratio)
+        SEED, use_subset, batch_size, imratio, dataset)
     loss_function = getattr(functional_loss, loss_name)
     epoch_res = {
         'pretrained':pretrained,
@@ -73,8 +77,7 @@ def train_classifier(
     out_csv = '%s/%s.csv' % (out_dir,file_key)
     f = open(out_csv, "w")
     write_list(f, COLUMN_ORDER)
-    model = ResNet20(
-        pretrained=pretrained, last_activation='sigmoid', num_classes=1)
+    model = eval(model)
     model = model.to(device)
     optimizer = SGD(model.parameters(), lr=lr)
     set_loaders = {
@@ -86,13 +89,15 @@ def train_classifier(
         print("Epoch: " + str(epoch))
         model.train()
         for data, targets in trainloader:
-            data = data.to(device)
-            targets = targets.to(device)
-            outputs = model(data)
-            loss = loss_function(outputs, targets)
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            optimizer.step()
+            if 1 in targets:
+                data = data.to(device)
+                targets = targets.to(device)
+                print("targets: " + str(targets))
+                outputs = model(data)
+                loss = loss_function(outputs, targets)
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                optimizer.step()
         model.eval()
         with torch.no_grad():
             for set_name, loader in set_loaders.items():
