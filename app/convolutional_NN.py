@@ -89,14 +89,15 @@ def train_classifier(
         print("Epoch: " + str(epoch))
         model.train()
         for data, targets in trainloader:
-            data = data.to(device)
-            targets = targets.to(device)
-            print("targets: " + str(targets))
-            outputs = model(data)
-            loss = loss_function(outputs, targets)
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            optimizer.step()
+            if 1 in targets:
+                data = data.to(device)
+                targets = targets.to(device)
+                print("targets: " + str(targets))
+                outputs = model(data)
+                loss = loss_function(outputs, targets)
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                optimizer.step()
         model.eval()
         with torch.no_grad():
             for set_name, loader in set_loaders.items():
