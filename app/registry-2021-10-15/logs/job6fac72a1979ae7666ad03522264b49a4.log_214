@@ -1,0 +1,21 @@
+### [bt]: This is batchtools v0.9.15
+### [bt]: Starting calculation of 1 jobs
+### [bt]: Setting working directory to '/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app'
+### [bt]: Memory measurement disabled
+### [bt]: Starting job [batchtools job.id=214]
+### [bt]: Setting seed to 26101 ...
+2021-10-15 11:22:12.008620: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /packages/gcc-8.3.1/R/4.1.0/lib64/R/lib:/usr/local/lib64:/etc/alternatives/jre_openjdk/lib/amd64/server:/packages/gcc-8.3.1/R/4.1.0/lib64/R/lib:/usr/local/lib64:/etc/alternatives/jre_openjdk/lib/amd64/server:/packages/gcc-8.3.1/netcdf-c/4.7.4-opdm2fw/lib:/packages/libtiff/4.1.0/lib:/packages/gcc-8.3.1/geos/3.8.1-j7t4spf/lib:/packages/gcc-8.3.1/proj/7.1.0/lib:/packages/gdal/3.3.1/lib:/packages/gcc-8.3.1/R/4.1.0/lib64/R/lib
+2021-10-15 11:22:12.008677: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+using device=cpu
+use_subset=False
+NUM_SAMPLES: [50000], POS:NEG: [25000 : 25000], POS_RATIO: 0.5000
+NUM_SAMPLES: [10000], POS:NEG: [5000 : 5000], POS_RATIO: 0.5000
+Epoch: 0
+/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torchmetrics/utilities/prints.py:36: UserWarning: Metric `AUROC` will save all targets and predictions in buffer. For large datasets this may lead to large memory footprint.
+  warnings.warn(*args, **kwargs)
+Error in (function (batch_size, imratio, loss_name, lr, out_dir)  : 
+  error code 9
+
+### [bt]: Job terminated with an exception [batchtools job.id=214]
+### [bt]: Calculation finished!
+slurmstepd: error: Detected 1 oom-kill event(s) in StepId=47934846.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.

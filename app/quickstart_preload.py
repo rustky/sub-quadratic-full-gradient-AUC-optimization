@@ -27,7 +27,7 @@ for set, train_arg in set_train_args.items():
             dev_tensors[data_type] = data_val.to(device)
     dataset_args = [dev_tensors[k] for k in data_types]
     dev_dataset = TensorDataset(*dataset_args)
-    set_loader_dict[set] = DataLoader(dev_dataset, batch_size=64)
+    set_loader_dict[set] = DataLoader(dev_dataset, batch_size=64, pin_memory=True)
 
 for X, y in set_loader_dict["test"]:
     print("Shape of X [N, C, H, W]: ", X.shape)

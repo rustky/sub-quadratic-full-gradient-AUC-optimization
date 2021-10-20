@@ -1,0 +1,2 @@
+batch_size	imratio	epoch	lr	train_loss	train_auc	test_loss	test_auc
+50	0.1	0	0.1	0.9581034183502197	0.5645016431808472	0.9438117742538452	0.5694616436958313

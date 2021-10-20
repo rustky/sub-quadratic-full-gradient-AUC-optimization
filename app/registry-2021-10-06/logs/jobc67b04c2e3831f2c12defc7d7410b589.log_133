@@ -1,0 +1,84 @@
+### [bt]: This is batchtools v0.9.15
+### [bt]: Starting calculation of 1 jobs
+### [bt]: Setting working directory to '/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app'
+### [bt]: Memory measurement disabled
+### [bt]: Starting job [batchtools job.id=133]
+### [bt]: Setting seed to 19446 ...
+2021-10-05 16:39:58.477194: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /packages/gcc-8.3.1/R/4.1.0/lib64/R/lib:/usr/local/lib64:/etc/alternatives/jre_openjdk/lib/amd64/server:/packages/gcc-8.3.1/R/4.1.0/lib64/R/lib:/usr/local/lib64:/etc/alternatives/jre_openjdk/lib/amd64/server:/packages/gcc-8.3.1/netcdf-c/4.7.4-opdm2fw/lib:/packages/libtiff/4.1.0/lib:/packages/gcc-8.3.1/geos/3.8.1-j7t4spf/lib:/packages/gcc-8.3.1/proj/7.1.0/lib:/packages/gdal/3.3.1/lib:/packages/gcc-8.3.1/R/4.1.0/lib64/R/lib
+2021-10-05 16:39:58.477224: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+using device=cpu
+use_subset=False
+NUM_SAMPLES: [27777], POS:NEG: [2777 : 25000], POS_RATIO: 0.1000
+NUM_SAMPLES: [10000], POS:NEG: [5000 : 5000], POS_RATIO: 0.5000
+Epoch: 0
+/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torchmetrics/utilities/prints.py:36: UserWarning: Metric `AUROC` will save all targets and predictions in buffer. For large datasets this may lead to large memory footprint.
+  warnings.warn(*args, **kwargs)
+/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torchmetrics/utilities/prints.py:36: UserWarning: `pos_label` automatically set 1.
+  warnings.warn(*args, **kwargs)
+Epoch: 1
+Epoch: 2
+Epoch: 3
+Epoch: 4
+Epoch: 5
+Epoch: 6
+Epoch: 7
+Epoch: 8
+Epoch: 9
+Epoch: 10
+Epoch: 11
+Epoch: 12
+Epoch: 13
+Epoch: 14
+Epoch: 15
+Epoch: 16
+Epoch: 17
+Epoch: 18
+Epoch: 19
+Epoch: 20
+Epoch: 21
+Epoch: 22
+Epoch: 23
+Epoch: 24
+Epoch: 25
+Epoch: 26
+Epoch: 27
+Epoch: 28
+Epoch: 29
+Epoch: 30
+Epoch: 31
+Epoch: 32
+Epoch: 33
+Epoch: 34
+Epoch: 35
+Epoch: 36
+Epoch: 37
+Epoch: 38
+Epoch: 39
+Epoch: 40
+Epoch: 41
+Epoch: 42
+Epoch: 43
+/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torch/autograd/__init__.py:149: UserWarning: Error detected in MulBackward0. Traceback of forward call that caused the error:
+  File "driver.py", line 4, in <module>
+    train_classifier(*train_args)
+  File "/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/convolutional_NN.py", line 86, in train_classifier
+    loss = loss_function(outputs, targets)
+  File "/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/functional_loss.py", line 25, in square_hinge
+    running_loss += a_coeff*(predicted_value**2) + b_coeff*(predicted_value) + c_coeff
+ (Triggered internally at  /opt/conda/conda-bld/pytorch_1631630742027/work/torch/csrc/autograd/python_anomaly_mode.cpp:104.)
+  allow_unreachable=True, accumulate_grad=True)  # allow_unreachable flag
+Traceback (most recent call last):
+  File "driver.py", line 4, in <module>
+    train_classifier(*train_args)
+  File "/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/convolutional_NN.py", line 88, in train_classifier
+    loss.backward()
+  File "/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torch/_tensor.py", line 255, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/th798/.conda/envs/emacs1/lib/python3.7/site-packages/torch/autograd/__init__.py", line 149, in backward
+    allow_unreachable=True, accumulate_grad=True)  # allow_unreachable flag
+RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation: [torch.FloatTensor [1]], which is output 0 of AddBackward0, is at version 49; expected version 48 instead. Hint: the backtrace further above shows the operation that failed to compute its gradient. The variable in question was changed in there or anywhere later. Good luck!
+Error in (function (batch_size, imratio, loss_name, lr, out_dir)  : 
+  error code 1
+
+### [bt]: Job terminated with an exception [batchtools job.id=133]
+### [bt]: Calculation finished!

@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name='jobb8a9c73c04f79ab8fb03a9afdbe72899'
+#SBATCH --output='/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/registry/logs/jobb8a9c73c04f79ab8fb03a9afdbe72899.log_%a'
+#SBATCH --error='/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/registry/logs/jobb8a9c73c04f79ab8fb03a9afdbe72899.log_%a'
+#SBATCH --time=2880
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8000
+
+
+#SBATCH --array=1-312
+export DEBUGME=
+Rscript -e 'batchtools::doJobCollection("/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/registry/jobs/jobb8a9c73c04f79ab8fb03a9afdbe72899.rds")'

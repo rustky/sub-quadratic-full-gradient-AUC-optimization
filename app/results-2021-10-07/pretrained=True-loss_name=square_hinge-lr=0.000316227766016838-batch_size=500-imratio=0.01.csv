@@ -1,0 +1,2 @@
+pretrained	loss_name	batch_size	imratio	lr	epoch	train_loss	train_auc	test_loss	test_auc
+True	square_hinge	500	0.01	0.000316227766016838	0	1.0225014686584473	0.4965105354785919	1.027482509613037	0.4890984296798706

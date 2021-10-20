@@ -10,6 +10,10 @@ def functional_square_hinge_loss(predictions, labels, margin=1):
     torch.autograd.set_detect_anomaly(True)
     a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     labels_length = len(labels)
+    I_pos = torch.where(labels == 1)[0]
+    I_neg = torch.where(labels == 0)[0]
+    num_pos = len(I_pos)
+    num_neg = len(I_neg)
     augmented_predictions = torch.zeros(labels_length)
     for i in range(0, labels_length):
         if labels[i] == 0:
