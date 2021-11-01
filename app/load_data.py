@@ -54,10 +54,10 @@ def set_all_seeds(SEED):
 def load_data(SEED, use_subset, batch_size, imratio, dataset):
     # TODO: stratify labels in unbalanced dataset
     (train_data, train_label), (test_data, test_label) = eval(dataset + "()")
+
     (train_images, train_labels) = ImbalanceGenerator(train_data, train_label, imratio=imratio, shuffle=True,
                                                       random_seed=SEED)
     (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
-
     trainset = ImageDataset(train_images, train_labels)
 
     if use_subset == True:
@@ -66,9 +66,8 @@ def load_data(SEED, use_subset, batch_size, imratio, dataset):
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
-
     testloader = torch.utils.data.DataLoader(ImageDataset(test_images, test_labels, mode='test'), batch_size=batch_size,
                                              shuffle=False, num_workers=1, pin_memory=True)
-
+    
     return trainloader, testloader
 

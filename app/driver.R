@@ -6,10 +6,10 @@ dir.create(out_dir)
 unlink(reg.dir, recursive=TRUE)
 reg <- batchtools::makeRegistry(reg.dir)
 ## 30 hours per 100 epochs
-MyFun <- function(batch_size, imratio, loss_name, lr, out_dir){
+MyFun <- function(batch_size, imratio, loss_name, lr, dataset, model, out_dir){
   status <- system(paste(
     "python driver.py",
-    batch_size, imratio, loss_name, lr, out_dir))
+    batch_size, imratio, loss_name, lr, out_dir, dataset, model))
   if(status != 0){
     stop("error code ", status)
   }
@@ -26,7 +26,9 @@ batchtools::batchMap(
     loss_name=c("square_hinge"),
     batch_size=c(10, 50, 100, 500, 1000, 5000),
     imratio=c(0.001, 0.01, 0.1, 0.5),
-    lr=10^seq(-4, 0, by=0.5)
+    lr=10^seq(-4, 0, by=0.5),
+    dataset = c("CIFAR10"),
+    model = c("ResNet20")
   ), reg=reg)
 job.table <- batchtools::getJobTable(reg=reg)
 chunks <- data.frame(job.table, chunk=1)

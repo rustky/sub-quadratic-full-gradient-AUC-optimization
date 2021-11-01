@@ -50,10 +50,10 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=1,
+    num_epochs=100,
     pretrained=True
 ):
-    torch.autograd.detect_anomaly()
+    # torch.autograd.detect_anomaly()
     batch_size = int(batch_size_str)
     imratio = float(imratio_str)
     lr = float(lr_str)
@@ -77,7 +77,7 @@ def train_classifier(
     out_csv = '%s/%s.csv' % (out_dir,file_key)
     f = open(out_csv, "w")
     write_list(f, COLUMN_ORDER)
-    model = eval(model)
+    model = eval(model + "()")
     model = model.to(device)
     optimizer = SGD(model.parameters(), lr=lr)
     set_loaders = {
