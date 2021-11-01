@@ -7,6 +7,7 @@ import torch.optim as optim
 from libauc.optimizers import SGD
 from libauc.models import ResNet20
 from libauc.models import *
+from LinearRegressionModel import LinearRegressionModel
 from torchmetrics.classification.auroc import AUROC
 import numpy as np
 roc_auc_score = AUROC()
@@ -50,8 +51,8 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=100,
-    pretrained=True
+    num_epochs=1,
+    pretrained=False
 ):
     # torch.autograd.detect_anomaly()
     batch_size = int(batch_size_str)
@@ -104,11 +105,12 @@ def train_classifier(
                 outputs_list = []
                 targets_list = []
                 for data, targets in loader:
-                    data = data.to(device)
-                    targets = targets.to(device)
-                    outputs = model(data)
-                    outputs_list.append(outputs)
-                    targets_list.append(targets)
+                    if 1 in targets:
+                        data = data.to(device)
+                        targets = targets.to(device)
+                        outputs = model(data)
+                        outputs_list.append(outputs)
+                        targets_list.append(targets)
                 outputs_array = torch.cat(outputs_list)
                 targets_array = torch.cat(targets_list).int()
                 epoch_res[set_name + "_loss"] = loss_function(
