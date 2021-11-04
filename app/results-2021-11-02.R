@@ -1,6 +1,6 @@
 library(ggplot2)
 library(data.table)
-results.csv.glob <- "results-2021-10-26/*.csv"
+results.csv.glob <- "results-2021-11-02/*.csv"
 (result.csv.vec <- Sys.glob(results.csv.glob))
 wc.cmd <- paste("wc -l", results.csv.glob)
 nline.dt <- fread(cmd=wc.cmd, col.names=c("lines", "file"))

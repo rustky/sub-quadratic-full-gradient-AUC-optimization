@@ -51,8 +51,8 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=1,
-    pretrained=False
+    num_epochs=100,
+    pretrained=True
 ):
     # torch.autograd.detect_anomaly()
     batch_size = int(batch_size_str)
@@ -105,12 +105,11 @@ def train_classifier(
                 outputs_list = []
                 targets_list = []
                 for data, targets in loader:
-                    if 1 in targets:
-                        data = data.to(device)
-                        targets = targets.to(device)
-                        outputs = model(data)
-                        outputs_list.append(outputs)
-                        targets_list.append(targets)
+                    data = data.to(device)
+                    targets = targets.to(device)
+                    outputs = model(data)
+                    outputs_list.append(outputs)
+                    targets_list.append(targets)
                 outputs_array = torch.cat(outputs_list)
                 targets_array = torch.cat(targets_list).int()
                 epoch_res[set_name + "_loss"] = loss_function(

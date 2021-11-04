@@ -1,6 +1,6 @@
 library(ggplot2)
 library(data.table)
-results.csv.glob <- "results-2021-10-26/*.csv"
+results.csv.glob <- "results-2021-11-01/*.csv"
 (result.csv.vec <- Sys.glob(results.csv.glob))
 wc.cmd <- paste("wc -l", results.csv.glob)
 nline.dt <- fread(cmd=wc.cmd, col.names=c("lines", "file"))
@@ -30,7 +30,7 @@ result.dt[, .(
   epochs=.N
 ), keyby=.(loss_name)]
 
-show.imratio <- 0.1
+show.imratio <- 0.5
 show.loss <- "square_hinge"
 result.dt[, count := .N, by=.(imratio, loss_name, lr, batch_size)]
 result.tall <- nc::capture_melt_multiple(
