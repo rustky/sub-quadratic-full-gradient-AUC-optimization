@@ -7,8 +7,7 @@ import torchvision.transforms as transforms
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Dataset
 import numpy as np
-from libauc.datasets import CIFAR10
-from libauc.datasets import CAT_VS_DOG
+from libauc.datasets import *
 from libauc.datasets import ImbalanceGenerator
 
 

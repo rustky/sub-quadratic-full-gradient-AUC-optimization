@@ -7,7 +7,7 @@ import torch.optim as optim
 from libauc.optimizers import SGD
 from libauc.models import ResNet20
 from libauc.models import *
-from LinearRegressionModel import LinearRegressionModel
+from LinearModel import LinearModel
 from torchmetrics.classification.auroc import AUROC
 import numpy as np
 roc_auc_score = AUROC()
@@ -51,9 +51,10 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=100,
+    num_epochs=250,
     pretrained=True
 ):
+    print(batch_size_str, imratio_str, loss_name, lr_str)
     # torch.autograd.detect_anomaly()
     batch_size = int(batch_size_str)
     imratio = float(imratio_str)
@@ -78,7 +79,8 @@ def train_classifier(
     out_csv = '%s/%s.csv' % (out_dir,file_key)
     f = open(out_csv, "w")
     write_list(f, COLUMN_ORDER)
-    model = eval(model + "()")
+    # model = eval(model + "()")
+    model = LinearModel()
     model = model.to(device)
     optimizer = SGD(model.parameters(), lr=lr)
     set_loaders = {
@@ -93,7 +95,7 @@ def train_classifier(
             if 1 in targets:
                 data = data.to(device)
                 targets = targets.to(device)
-                print("targets: " + str(targets))
+                # print("targets: " + str(targets))
                 outputs = model(data)
                 loss = loss_function(outputs, targets)
                 optimizer.zero_grad(set_to_none=True)
@@ -105,7 +107,7 @@ def train_classifier(
                 outputs_list = []
                 targets_list = []
                 for data, targets in loader:
-                    data = data.to(device)
+                    data =  data.to(device)
                     targets = targets.to(device)
                     outputs = model(data)
                     outputs_list.append(outputs)
