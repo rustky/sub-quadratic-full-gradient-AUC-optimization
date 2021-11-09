@@ -51,7 +51,7 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=250,
+    num_epochs=200,
     pretrained=True
 ):
     print(batch_size_str, imratio_str, loss_name, lr_str)
@@ -79,8 +79,7 @@ def train_classifier(
     out_csv = '%s/%s.csv' % (out_dir,file_key)
     f = open(out_csv, "w")
     write_list(f, COLUMN_ORDER)
-    # model = eval(model + "()")
-    model = LinearModel()
+    model = eval(model + "()")
     model = model.to(device)
     optimizer = SGD(model.parameters(), lr=lr)
     set_loaders = {

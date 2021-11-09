@@ -52,6 +52,7 @@ def set_all_seeds(SEED):
 
 def load_data(SEED, use_subset, batch_size, imratio, dataset):
     # TODO: stratify labels in unbalanced dataset
+    set_all_seeds(SEED)
     (train_data, train_label), (test_data, test_label) = eval(dataset + "()")
 
     (train_images, train_labels) = ImbalanceGenerator(train_data, train_label, imratio=imratio, shuffle=True,
