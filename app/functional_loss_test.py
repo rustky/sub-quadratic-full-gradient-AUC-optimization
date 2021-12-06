@@ -22,15 +22,13 @@ def square_hinge_test(predictions, labels, margin=1):
     return sum(loss_values[I_neg])/(len(I_pos)*len(I_neg))
 
 def square_test(predictions,labels, margin=1):
-    a_coeff, b_coeff, c_coeff, running_loss = 0,0,0,0
     I_pos = torch.where(labels == 1)[0]
     I_neg = torch.where(labels == 0)[0]
-    sort = torch.argsort(labels)
-    predicted_value = predictions[sort]
-    sorted_labels = labels[sort]
-    z_coeff = margin - predictions
-    a_coeff = torch.sum(sorted_labels, dim = 0)
-    b_coeff = torch.sum(2*z_coeff*sorted_labels, dim = 0)
-    c_coeff = torch.sum((z_coeff**2)*sorted_labels, dim = 0)
+    z_coeff = margin - predictions[I_pos]
+    a_coeff = torch.sum(labels[I_pos])
+    b_coeff = torch.sum(2*z_coeff*labels[I_pos], dim = 0)
+    c_coeff = torch.sum((z_coeff**2)*labels[I_pos], dim = 0)
+    predicted_value = predictions[I_neg]
     loss_values = a_coeff*(predicted_value**2) + b_coeff*predicted_value + c_coeff
-    return sum(loss_values[I_neg])/(len(I_pos)*len(I_neg))
+    running_loss = torch.sum(loss_values)/(len(I_pos)*len(I_neg))
+    return running_loss
