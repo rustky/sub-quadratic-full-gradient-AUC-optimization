@@ -4,7 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import time
 import torch.optim as optim
-from libauc.optimizers import SGD
+from libauc.losses import AUCMLoss # from LBFGS import LBFGS,FullBatchLBFGS
+from libauc.optimizers import *
 from libauc.models import ResNet20
 from libauc.models import *
 from LinearModel import LinearModel
@@ -12,7 +13,7 @@ from torchmetrics.classification.auroc import AUROC
 import numpy as np
 roc_auc_score = AUROC()
 from load_data import load_data
-import functional_loss
+import functional_loss_test
 import sys
 import os
 
@@ -37,10 +38,14 @@ COLUMN_ORDER = [
     "imratio",
     "lr",
     "epoch",
-    "train_loss",
+    "train_our_square",
+    "train_our_square_hinge",
+    "train_libauc_loss",
     "train_auc",
-    "test_loss",
-    "test_auc",
+    "test_our_square",
+    "test_our_square_hinge",
+    "test_libauc_loss",
+    "test_auc"
 ]
 
 def train_classifier(
@@ -51,7 +56,7 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=200,
+    num_epochs=100,
     pretrained=True
 ):
     print(batch_size_str, imratio_str, loss_name, lr_str)
@@ -60,18 +65,22 @@ def train_classifier(
     imratio = float(imratio_str)
     lr = float(lr_str)
     is_interactive_job = os.getenv("SLURM_ARRAY_TASK_COUNT") is None
-    use_subset = is_interactive_job
+    use_subset = False
     print("use_subset=%s"%use_subset)
     SEED = 123
     trainloader, testloader = load_data(
         SEED, use_subset, batch_size, imratio, dataset)
-    loss_function = getattr(functional_loss, loss_name)
+    # loss_function = getattr(functional_loss_test, loss_name)
+    loss_function = AUCMLoss(imratio)
+    libauc_loss = AUCMLoss(imratio=imratio)
     epoch_res = {
         'pretrained':pretrained,
         "loss_name": loss_name,
         'lr': lr,
         "batch_size": batch_size,
         "imratio": imratio,
+        "dataset": dataset,
+        "model": model
     }
     file_key = "-".join([
         '%s=%s' % pair for pair in epoch_res.items()
@@ -81,7 +90,17 @@ def train_classifier(
     write_list(f, COLUMN_ORDER)
     model = eval(model + "()")
     model = model.to(device)
-    optimizer = SGD(model.parameters(), lr=lr)
+    # optimizer = SGD(model.parameters(), lr=lr)
+    # optimizer = optim.LBFGS(model.parameters(), lr=lr)
+    optimizer = PESG(model,
+                    a=libauc_loss.a,
+                    b=libauc_loss.b,
+                    alpha=libauc_loss.alpha,
+                    imratio=imratio,
+                    lr=lr,
+                    gamma=500,
+                    margin=1,
+                    weight_decay=1e-4)
     set_loaders = {
         "train": trainloader,
         "test":testloader
@@ -97,9 +116,16 @@ def train_classifier(
                 # print("targets: " + str(targets))
                 outputs = model(data)
                 loss = loss_function(outputs, targets)
-                optimizer.zero_grad(set_to_none=True)
+                # optimizer.zero_grad(set_to_none=True)
+                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                # def closure():
+                #     optimizer.zero_grad()
+                #     outputs = model(data)
+                #     loss = loss_function(outputs, targets)
+                #     return loss             
+                # optimizer.step(closure)
         model.eval()
         with torch.no_grad():
             for set_name, loader in set_loaders.items():
@@ -113,9 +139,9 @@ def train_classifier(
                     targets_list.append(targets)
                 outputs_array = torch.cat(outputs_list)
                 targets_array = torch.cat(targets_list).int()
-                epoch_res[set_name + "_loss"] = loss_function(
-                    outputs_array, targets_array).item()
-                epoch_res[set_name + "_auc"] = roc_auc_score(
-                    outputs_array, targets_array).item()
+                eval_dict = {"our_square":functional_loss_test.square_test, "our_square_hinge": functional_loss_test.square_hinge_test, "libauc_loss":libauc_loss, "auc":roc_auc_score}
+                for eval_name, fun in eval_dict.items():
+                    loss = fun(outputs_array, targets_array)
+                    epoch_res[set_name + "_"+eval_name] = loss.item()
             out_list = [epoch_res[k] for k in COLUMN_ORDER]
             write_list(f, out_list)

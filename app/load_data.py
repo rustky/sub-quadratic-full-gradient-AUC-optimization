@@ -59,14 +59,15 @@ def load_data(SEED, use_subset, batch_size, imratio, dataset):
                                                       random_seed=SEED)
     (test_images, test_labels) = ImbalanceGenerator(test_data, test_label, is_balanced=True, random_seed=SEED)
     trainset = ImageDataset(train_images, train_labels)
-
+    # batch_size = len(trainset)
     if use_subset == True:
         subset = list(range(0, len(trainset), 10))
         trainset = torch.utils.data.Subset(trainset, subset)
+    testset = ImageDataset(test_images, test_labels, mode='test')
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=1, pin_memory=True, drop_last=True)
-    testloader = torch.utils.data.DataLoader(ImageDataset(test_images, test_labels, mode='test'), batch_size=batch_size,
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=1, pin_memory=True)
     
     return trainloader, testloader

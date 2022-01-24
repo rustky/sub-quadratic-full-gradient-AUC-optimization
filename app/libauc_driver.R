@@ -1,34 +1,30 @@
 library(batchtools)
 out_dir <- strftime(Sys.time(), "results-%Y-%m-%d")
-
+out_dir <- paste("/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app", out_dir, sep = "/")
 dir.create(out_dir)
 (reg.dir <- sub("results", "registry", out_dir))
 unlink(reg.dir, recursive=TRUE)
 reg <- batchtools::makeRegistry(reg.dir)
 ## 30 hours per 100 epochs
-MyFun <- function(batch_size, imratio, loss_name, lr, dataset, model, out_dir){
+MyFun <- function(batch_size, imratio, lr, model, dataset){
   status <- system(paste(
-    "python driver.py",
-    batch_size, imratio, loss_name, lr, out_dir, dataset, model))
+    "python /projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/libauc_driver.py",
+    batch_size, imratio, lr, model, dataset))
   if(status != 0){
     stop("error code ", status)
   }
 }
 batchtools::batchMap(
   MyFun,
-  more.args=list(
-    out_dir=out_dir
-  ), 
   args=data.table::CJ(
     ##data_set=
     ##model_architecture=
     ##data_and_model=c("cifar10_resnet20", "chexpert_whatever", "animals_whatever", "MNIST_3layer", "MNIST_LeNet5"),
-    loss_name=c("square_hinge_test"),
     batch_size=c(10, 50, 100, 500, 1000, 5000),
     imratio=c(0.001, 0.01, 0.1, 0.5),
     lr=10^seq(-4, 0, by=0.5),
-    dataset = c("STL10", "CIFAR10", "CAT_VS_DOG"),
-    model = c("ResNet20")
+    model = c("ResNet20"),
+    dataset = c("STL10")
   ), reg=reg)
 job.table <- batchtools::getJobTable(reg=reg)
 chunks <- data.frame(job.table, chunk=1)
@@ -39,7 +35,7 @@ batchtools::submitJobs(chunks, resources=list(
   ntasks=1, #>1 for MPI jobs.
   chunks.as.arrayjobs=TRUE), reg=reg)
 
-reg.dir.vec <- Sys.glob("registry*")
+reg.dir.vec <- Sys.glob("/projects/genomic-ml/sub-quadratic-full-gradient-AUC-optimization/app/registry*")
 (reg.dir <- reg.dir.vec[length(reg.dir.vec)])
 reg <- batchtools::loadRegistry(reg.dir)
 
