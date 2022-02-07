@@ -16,6 +16,7 @@ from load_data import load_data
 import functional_loss_test
 import sys
 import os
+from time import gmtime, strftime
 
 ## TODO Create tensors directly on the target device: Instead of
 ## calling torch.rand(size).cuda() to generate a random tensor,
@@ -45,7 +46,8 @@ COLUMN_ORDER = [
     "test_our_square",
     "test_our_square_hinge",
     "test_libauc_loss",
-    "test_auc"
+    "test_auc",
+    "wall_time"
 ]
 
 def train_classifier(
@@ -65,13 +67,13 @@ def train_classifier(
     imratio = float(imratio_str)
     lr = float(lr_str)
     is_interactive_job = os.getenv("SLURM_ARRAY_TASK_COUNT") is None
-    use_subset = False
+    use_subset = is_interactive_job
     print("use_subset=%s"%use_subset)
     SEED = 123
     trainloader, testloader = load_data(
         SEED, use_subset, batch_size, imratio, dataset)
     # loss_function = getattr(functional_loss_test, loss_name)
-    loss_function = AUCMLoss(imratio)
+    loss_function = AUCMLoss(imratio=imratio)
     libauc_loss = AUCMLoss(imratio=imratio)
     epoch_res = {
         'pretrained':pretrained,
@@ -93,9 +95,9 @@ def train_classifier(
     # optimizer = SGD(model.parameters(), lr=lr)
     # optimizer = optim.LBFGS(model.parameters(), lr=lr)
     optimizer = PESG(model,
-                    a=libauc_loss.a,
-                    b=libauc_loss.b,
-                    alpha=libauc_loss.alpha,
+                    a=loss_function.a,
+                    b=loss_function.b,
+                    alpha=loss_function.alpha,
                     imratio=imratio,
                     lr=lr,
                     gamma=500,
@@ -117,8 +119,10 @@ def train_classifier(
                 outputs = model(data)
                 loss = loss_function(outputs, targets)
                 # optimizer.zero_grad(set_to_none=True)
+                # loss.backward()
+                # For LIBAUC:
                 optimizer.zero_grad()
-                loss.backward()
+                loss.backward(retain_graph=True)
                 optimizer.step()
                 # def closure():
                 #     optimizer.zero_grad()
@@ -126,6 +130,7 @@ def train_classifier(
                 #     loss = loss_function(outputs, targets)
                 #     return loss             
                 # optimizer.step(closure)
+        epoch_res['wall_time'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         model.eval()
         with torch.no_grad():
             for set_name, loader in set_loaders.items():
