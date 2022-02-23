@@ -28,7 +28,8 @@ dev_str = "cuda" if torch.cuda.is_available() else "cpu"
 print('using device='+dev_str)
 device = torch.device(dev_str)
 
-def write_list(f, L):
+def write_list(out_csv, L, mode):
+    f = open(out_csv, mode)
     txt = "\t".join([str(x) for x in L]) + "\n"
     f.write(txt)
 
@@ -58,28 +59,27 @@ def train_classifier(
     out_dir,
     dataset,
     model,
-    num_epochs=100,
-    pretrained=True
+    num_epochs=2000,
+    pretrained=False
 ):
-    print(batch_size_str, imratio_str, loss_name, lr_str)
+    print(batch_size_str, imratio_str, loss_name, lr_str, dataset)
     # torch.autograd.detect_anomaly()
-    batch_size = int(batch_size_str)
     imratio = float(imratio_str)
     lr = float(lr_str)
     is_interactive_job = os.getenv("SLURM_ARRAY_TASK_COUNT") is None
-    use_subset = is_interactive_job
+    use_subset = False
     print("use_subset=%s"%use_subset)
     SEED = 123
     trainloader, testloader = load_data(
-        SEED, use_subset, batch_size, imratio, dataset)
-    # loss_function = getattr(functional_loss_test, loss_name)
-    loss_function = AUCMLoss(imratio=imratio)
+        SEED, use_subset, batch_size_str, imratio, dataset)
+    loss_function = getattr(functional_loss_test, loss_name)
+    # loss_function = AUCMLoss(imratio=imratio)
     libauc_loss = AUCMLoss(imratio=imratio)
     epoch_res = {
         'pretrained':pretrained,
         "loss_name": loss_name,
         'lr': lr,
-        "batch_size": batch_size,
+        "batch_size": batch_size_str,
         "imratio": imratio,
         "dataset": dataset,
         "model": model
@@ -88,21 +88,21 @@ def train_classifier(
         '%s=%s' % pair for pair in epoch_res.items()
     ])
     out_csv = '%s/%s.csv' % (out_dir,file_key)
-    f = open(out_csv, "w")
-    write_list(f, COLUMN_ORDER)
+
+    write_list(out_csv, COLUMN_ORDER,'w')
     model = eval(model + "()")
     model = model.to(device)
     # optimizer = SGD(model.parameters(), lr=lr)
-    # optimizer = optim.LBFGS(model.parameters(), lr=lr)
-    optimizer = PESG(model,
-                    a=loss_function.a,
-                    b=loss_function.b,
-                    alpha=loss_function.alpha,
-                    imratio=imratio,
-                    lr=lr,
-                    gamma=500,
-                    margin=1,
-                    weight_decay=1e-4)
+    optimizer = optim.LBFGS(model.parameters(), lr=lr)
+    # optimizer = PESG(model,
+    #                 a=loss_function.a,
+    #                 b=loss_function.b,
+    #                 alpha=loss_function.alpha,
+    #                 imratio=imratio,
+    #                 lr=lr,
+    #                 gamma=500,
+    #                 margin=1,
+    #                 weight_decay=1e-4)
     set_loaders = {
         "train": trainloader,
         "test":testloader
@@ -116,20 +116,21 @@ def train_classifier(
                 data = data.to(device)
                 targets = targets.to(device)
                 # print("targets: " + str(targets))
-                outputs = model(data)
-                loss = loss_function(outputs, targets)
+                # outputs = model(data)
+                # loss = loss_function(outputs, targets)
                 # optimizer.zero_grad(set_to_none=True)
                 # loss.backward()
                 # For LIBAUC:
-                optimizer.zero_grad()
-                loss.backward(retain_graph=True)
-                optimizer.step()
-                # def closure():
-                #     optimizer.zero_grad()
-                #     outputs = model(data)
-                #     loss = loss_function(outputs, targets)
-                #     return loss             
-                # optimizer.step(closure)
+                # optimizer.zero_grad()
+                # loss.backward(retain_graph=True)
+                # optimizer.step()
+                def closure():
+                    optimizer.zero_grad()
+                    outputs = model(data)
+                    loss = loss_function(outputs, targets)
+                    loss.backward()
+                    return loss             
+                optimizer.step(closure)
         epoch_res['wall_time'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         model.eval()
         with torch.no_grad():
@@ -149,4 +150,4 @@ def train_classifier(
                     loss = fun(outputs_array, targets_array)
                     epoch_res[set_name + "_"+eval_name] = loss.item()
             out_list = [epoch_res[k] for k in COLUMN_ORDER]
-            write_list(f, out_list)
+            write_list(out_csv, out_list,'a')
