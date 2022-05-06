@@ -104,8 +104,10 @@ points <- ggplot(point.dt[(imratio==imratio.to.show)])+
   facet_grid(.~dataset, scales ='free')+
   xlab("Test AUC")+
   ylab("Loss + Algorithm")+
-  ggtitle(paste("Imratio =", imratio.to.show,sep=" "))
+  ggtitle(paste("Proportion Of Positive Examples In The Train Set =", imratio.to.show,sep=" "))
+png(paste(imratio.to.show, "test-auc-at-max-valid-epoch.png",sep = '-'), width = 7.5, height=1.5, units='in',res = 200)
 print(points)
+dev.off()
 
 ggplot(max.by.seed.dt[(imratio!=0.5)])+
   geom_point(aes(batch_size, experiment))+
